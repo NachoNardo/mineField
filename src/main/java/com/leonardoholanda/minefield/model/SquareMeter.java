@@ -3,6 +3,8 @@ package com.leonardoholanda.minefield.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.leonardoholanda.minefield.exception.ExplosionException;
+
 public class SquareMeter {
 
 	private final int line;
@@ -14,12 +16,56 @@ public class SquareMeter {
 	
 	private List<SquareMeter> neighbors = new ArrayList<SquareMeter>();
 	
-	public boolean isHasMine() {
+	public void changeMark () {
+		if(!isOpen) {
+			isMarked = !isMarked;
+		}
+	}
+	
+	public boolean open() {
+		
+		if(!isOpen&&!isMarked) {
+			isOpen = true;
+			
+			if(hasMine) {
+				throw new ExplosionException();
+			} 
+			
+			if(safeNeighborhood()) {
+				neighbors.forEach(n -> n.open());
+			}
+			
+			return true;
+		} else 
+			return false;
+	}
+	
+	boolean goalReached() {
+		boolean opened = !this.hasMine() && this.isOpen();
+		boolean prot = this.hasMine() && this.isMarked();
+		return opened || prot;
+	}
+	
+	long minesInTheNeighborhood () {
+		return neighbors.stream().filter(n -> n.hasMine()).count();
+	}
+	
+	void reset() {
+		this.isOpen = false;
+		this.isMarked = false;
+		this.hasMine = false;
+	}
+	
+	boolean safeNeighborhood() {
+		return neighbors.stream().noneMatch(n -> n.hasMine);
+	}
+	
+	public boolean hasMine() {
 		return hasMine;
 	}
 	
-	public void setHasMine(boolean hasMine) {
-		this.hasMine = hasMine;
+	public void mine() {
+		this.hasMine = true;
 	}
 	
 	public int getLine() {
@@ -70,5 +116,19 @@ public class SquareMeter {
 		} else {
 			return false;
 		} 
+	}
+	
+	public String toString() {
+		if (this.isMarked) {
+			return "X";
+		} else if (this.isOpen() && this.hasMine()) {
+			return "*";
+		} else if (this.isOpen() && this.minesInTheNeighborhood() > 0){
+			return Long.toString(this.minesInTheNeighborhood());
+		} else if (this.isOpen) {
+			return " ";
+		} else {
+			return "?";
+		}
 	}
 }
