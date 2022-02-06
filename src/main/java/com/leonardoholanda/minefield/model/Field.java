@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.leonardoholanda.minefield.exception.ExplosionException;
+
 public class Field {
 
 	public int lines;
@@ -36,9 +38,9 @@ public class Field {
 		Predicate<SquareMeter> mined = sqm -> sqm.hasMine();
 		
 		do {
-			minesArmed = (int) sqms.stream().filter(mined).count();
 			int random = (int)(Math.random() * sqms.size());
 			sqms.get(random).mine();
+			minesArmed = (int) sqms.stream().filter(mined).count();
 		} while (minesArmed < this.mines);
 	}
 
@@ -62,8 +64,19 @@ public class Field {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		
+		sb.append(" ");
+		sb.append(" ");
+		for (int c = 0; c < columns; c++) {
+			sb.append(" ");
+			sb.append(c);
+			sb.append(" ");
+		}
+		sb.append("\n");
+		
 		int i = 0; 
 		for (int l = 0; l < lines; l++) {
+			sb.append(l);
+			sb.append(" ");
 			for (int c = 0; c < columns; c++) {
 				sb.append(" ");
 				sb.append(sqms.get(i));
@@ -77,11 +90,16 @@ public class Field {
 	}
 	
 	public void open(int line, int column) {
-		sqms.parallelStream()
-			.filter(sqm -> sqm.getLine() == line)
-			.filter(sqm -> sqm.getColumn() == column)
-			.findFirst()
-			.ifPresent(sqm -> sqm.open());
+		try {
+			sqms.parallelStream()
+				.filter(sqm -> sqm.getLine() == line)
+				.filter(sqm -> sqm.getColumn() == column)
+				.findFirst()
+				.ifPresent(sqm -> sqm.open());
+		} catch (ExplosionException e) {
+			sqms.forEach(sqm -> sqm.setOpen(true));
+			throw e;
+		}
 	}
 	
 	public void mark(int line, int column) {

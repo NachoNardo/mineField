@@ -80,7 +80,7 @@ public class SquareMeter {
 		return isOpen;
 	}
 
-	public void setOpen(boolean isOpen) {
+	void setOpen(boolean isOpen) {
 		this.isOpen = isOpen;
 	}
 	
